@@ -11,6 +11,7 @@ import {
 } from '@/components/route-typeahead'
 import { TreemapVisualizer } from '@/components/treemap-visualizer'
 
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Skeleton, TreemapSkeleton } from '@/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
@@ -18,15 +19,7 @@ import { AnalyzeData, ModulesData } from '@/lib/analyze-data'
 import { computeActiveEntries, computeModuleDepthMap } from '@/lib/module-graph'
 import { SpecialModule } from '@/lib/types'
 import { getSpecialModuleType, fetchStrict } from '@/lib/utils'
-
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B'
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`
-  if (bytes < 1024 * 1024 * 1024)
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
-}
+import { formatBytes } from '@/lib/utils'
 
 export default function Home() {
   const [selectedRoute, setSelectedRoute] = useState<string | null>(null)
@@ -75,6 +68,7 @@ export default function Home() {
   const [isMouseInTreemap, setIsMouseInTreemap] = useState(false)
   const [hoveredNodeInfo, setHoveredNodeInfo] = useState<{
     name: string
+    size: number
     server?: boolean
     client?: boolean
   } | null>(null)
@@ -331,9 +325,7 @@ export default function Home() {
                         specialModuleType ===
                           SpecialModule.POLYFILL_NOMODULE) && (
                         <div className="flex items-center gap-2">
-                          <dt className="inline-flex items-center rounded-md bg-polyfill/10 dark:bg-polyfill/30 px-2 py-1 text-xs font-medium text-polyfill dark:text-polyfill-foreground ring-1 ring-inset ring-polyfill/20 shrink-0">
-                            Polyfill
-                          </dt>
+                          <Badge variant="polyfill">Polyfill</Badge>
                           <dd className="text-xs text-muted-foreground">
                             Next.js built-in polyfills
                             {specialModuleType ===
@@ -394,22 +386,22 @@ export default function Home() {
 
       {analyzeData && (
         <div className="flex-none border-t border-border bg-background px-4 py-2 h-10">
-          <p className="text-sm text-muted-foreground">
+          <div className="text-sm text-muted-foreground">
             {hoveredNodeInfo ? (
               <>
                 <span className="font-medium text-foreground">
                   {hoveredNodeInfo.name}
                 </span>
+                <span className="ml-2 text-muted-foreground">
+                  {formatBytes(hoveredNodeInfo.size)}
+                </span>
                 {(hoveredNodeInfo.server || hoveredNodeInfo.client) && (
-                  <span className="ml-2 text-xs">
+                  <span className="ml-2 inline-flex gap-1">
                     {hoveredNodeInfo.client && (
-                      <span className="text-primary">[client]</span>
-                    )}
-                    {hoveredNodeInfo.server && hoveredNodeInfo.client && (
-                      <span> </span>
+                      <Badge variant="client">client</Badge>
                     )}
                     {hoveredNodeInfo.server && (
-                      <span className="text-primary">[server]</span>
+                      <Badge variant="server">server</Badge>
                     )}
                   </span>
                 )}
@@ -417,7 +409,7 @@ export default function Home() {
             ) : (
               'Hover over a file to see details'
             )}
-          </p>
+          </div>
         </div>
       )}
     </main>
