@@ -2531,12 +2531,13 @@ function reviveModel(response, parentObj, parentKey, value, reference) {
     else
       for (i in value)
         hasOwnProperty.call(value, i) &&
+          (i !== "__proto__" && i !== "constructor" && i !== "prototype") &&
           ((parentObj =
             void 0 !== reference && -1 === i.indexOf(":")
               ? reference + ":" + i
               : void 0),
           (parentObj = reviveModel(response, value, i, value[i], parentObj)),
-          void 0 !== parentObj || "__proto__" === i
+          void 0 !== parentObj
             ? (value[i] = parentObj)
             : delete value[i]);
   return value;
@@ -2652,6 +2653,9 @@ function fulfillReference(response, reference, value) {
       (value = value[name]);
   }
   reference = map(response, value, parentObject, key);
+  if (key === "__proto__" || key === "constructor" || key === "prototype") {
+    throw Error("Blocked potentially dangerous key: " + key);
+  }
   parentObject[key] = reference;
   "" === key && null === handler.value && (handler.value = reference);
   handler.deps--;
